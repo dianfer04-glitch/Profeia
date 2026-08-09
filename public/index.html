@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProfeIA — Prepara tu clase en minutos</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ProfeIA</div>
+  <div style="display:flex; align-items:center; gap:20px;">
+    <a href="#" id="link-historial" onclick="verHistorial(); return false;" style="display:none; color:var(--color-primario); font-weight:600; font-size:14px; text-decoration:none;">🗂️ Mi historial</a>
+    <div id="usuario-info"></div>
+  </div>
+</div>
+
+<div class="contenedor">
+
+  <div id="pantalla-login" class="card">
+    <h1>Bienvenido, profe 👋</h1>
+    <p class="subtitulo">Prepara tu clase de
