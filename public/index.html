@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProfeIA — Prepara tu clase en minutos</title>
+<title>ProfeIA - Prepara tu clase en minutos</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,7 +13,7 @@
 <div class="topbar">
   <div class="logo">ProfeIA</div>
   <div style="display:flex; align-items:center; gap:20px;">
-    <a href="#" id="link-historial" onclick="verHistorial(); return false;" style="display:none; color:var(--color-primario); font-weight:600; font-size:14px; text-decoration:none;">🗂️ Mi historial</a>
+    <a href="#" id="link-historial" onclick="verHistorial(); return false;" style="display:none; color:var(--color-primario); font-weight:600; font-size:14px; text-decoration:none;">Mi historial</a>
     <div id="usuario-info"></div>
   </div>
 </div>
@@ -21,5 +21,75 @@
 <div class="contenedor">
 
   <div id="pantalla-login" class="card">
-    <h1>Bienvenido, profe 👋</h1>
-    <p class="subtitulo">Prepara tu clase de
+    <h1>Bienvenido, profe</h1>
+    <p class="subtitulo">Prepara tu clase de manana en minutos, no en horas. Solo tu ves lo que generas aqui.</p>
+    <label>Tu correo</label>
+    <input type="email" id="input-correo" placeholder="profe@colegio.edu.co">
+    <button class="btn-primario" style="margin-top:20px; width:100%;" onclick="enviarLinkMagico()">Ingresar con mi correo</button>
+    <p id="mensaje-login" style="font-size:13px; color:var(--color-texto-suave); margin-top:10px;"></p>
+  </div>
+
+  <div id="modal-bienvenida" class="card" style="display:none; text-align:center;">
+    <h1>Bienvenido a ProfeIA</h1>
+    <p class="subtitulo">3 herramientas para ahorrarte horas de preparacion cada semana.</p>
+    <div style="text-align:left; margin: 20px 0;">
+      <p><strong>Preparacion de clase</strong> - guion, ejemplos y enfoque, listos para dictar.</p>
+      <p><strong>Infografia</strong> - resumen visual del tema para tu tablero o presentacion.</p>
+      <p><strong>Cuestionario</strong> - 10 preguntas tipo Pruebas Saber, con solucionario.</p>
+      <p>Todo tu historial queda guardado de forma privada, solo tu lo ves.</p>
+    </div>
+    <button class="btn-primario" style="width:100%;" onclick="cerrarBienvenida()">Entendido, empecemos</button>
+  </div>
+
+  <div id="pantalla-app" style="display:none;">
+
+    <div class="card">
+      <h1>Nueva clase</h1>
+      <p class="subtitulo">Completa los datos y elige que necesitas generar.</p>
+
+      <label>Asignatura</label>
+      <select id="asignatura">
+        <option>Matematicas</option>
+        <option>Lenguaje</option>
+        <option>Ciencias Naturales</option>
+        <option>Ciencias Sociales</option>
+        <option>Ingles</option>
+        <option>Otra</option>
+      </select>
+
+      <label>Grado</label>
+      <select id="grado">
+        <option>1 - 3 (Primaria inicial)</option>
+        <option>4 - 5 (Primaria)</option>
+        <option>6 - 9 (Secundaria)</option>
+        <option>10 - 11 (Media)</option>
+      </select>
+
+      <label>Tema de la clase</label>
+      <input type="text" id="tema" placeholder="Ej: Fracciones equivalentes">
+
+      <div class="botones-accion">
+        <button class="btn-secundario" onclick="generar('preparacion')">Preparacion de clase</button>
+        <button class="btn-secundario" onclick="generar('infografia')">Infografia del tema</button>
+        <button class="btn-secundario" onclick="generar('cuestionario')">Cuestionario tipo Saber</button>
+      </div>
+
+      <div id="loading" class="loading" style="display:none;">Generando tu contenido, un momento...</div>
+      <div id="resultado" class="resultado"></div>
+      <div id="infografia-visual"></div>
+      <button id="btn-descargar" style="display:none; margin-top:12px; width:100%;" class="btn-primario" onclick="descargarPDF()">Descargar PDF</button>
+    </div>
+
+    <div class="card" id="panel-historial" style="display:none;">
+      <h1>Mi historial</h1>
+      <p class="subtitulo">Todo lo que has generado. Solo tu puedes verlo.</p>
+      <div id="resumen-historial"></div>
+      <div id="lista-historial"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
