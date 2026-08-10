@@ -15,6 +15,9 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let usuarioActual = null;
 let ultimoResultado = "";
 let ultimoTipo = "";
+// Datos de lo último que se mostró en pantalla, para poder enviarlo por
+// correo con su encabezado correcto (sirve igual si viene del historial).
+let ultimoContexto = { asignatura: "", grado: "", tema: "" };
 
 // ---------- LOGIN CON LINK MÁGICO (sin contraseñas que recordar) ----------
 async function enviarLinkMagico() {
@@ -119,6 +122,7 @@ async function generar(tipo) {
   document.getElementById("loading").style.display = "block";
   document.getElementById("resultado").style.display = "none";
   document.getElementById("btn-descargar").style.display = "none";
+  document.getElementById("btn-correo").style.display = "none";
 
   try {
     const respuesta = await fetch("/api/generate", {
@@ -137,6 +141,7 @@ async function generar(tipo) {
 
     ultimoResultado = data.contenido;
     ultimoTipo = tipo;
+    ultimoContexto = { asignatura, grado, tema };
 
     if (tipo === "infografia") {
       await renderizarInfografia(data.contenido, asignatura, tema, grado);
@@ -146,6 +151,7 @@ async function generar(tipo) {
       document.getElementById("infografia-visual").style.display = "none";
     }
     document.getElementById("btn-descargar").style.display = "block";
+  document.getElementById("btn-correo").style.display = "block";
 
     // Guardar en el historial PRIVADO del docente (aislado por RLS en Supabase)
     await db.from("clases_generadas").insert({
@@ -260,6 +266,48 @@ function descargarPDF() {
   doc.save(`${ultimoTipo}_profeia.pdf`);
 }
 
+// ---------- ENVIAR POR CORREO ----------
+// No le mandamos al servidor a qué correo enviar: le mandamos la credencial
+// de la sesión y él resuelve el destinatario. Ver api/enviar-correo.js
+async function enviarPorCorreo() {
+  const boton = document.getElementById("btn-correo");
+  const original = boton.textContent;
+  boton.disabled = true;
+  boton.textContent = "Enviando...";
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+
+    const respuesta = await fetch("/api/enviar-correo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: session?.access_token,
+        tipo: ultimoTipo,
+        asignatura: ultimoContexto.asignatura,
+        grado: ultimoContexto.grado,
+        tema: ultimoContexto.tema,
+        contenido: ultimoResultado
+      })
+    });
+
+    const data = await respuesta.json();
+
+    if (respuesta.ok) {
+      boton.textContent = `✅ Enviado a ${data.destinatario}`;
+    } else {
+      boton.textContent = "❌ No se pudo enviar";
+      alert(data.error || "No se pudo enviar el correo.");
+    }
+  } catch (e) {
+    boton.textContent = "❌ No se pudo enviar";
+    alert("No se pudo enviar el correo. Revisa tu conexión.");
+  } finally {
+    // Se deja leer el resultado un momento y luego vuelve a quedar disponible.
+    setTimeout(() => { boton.textContent = original; boton.disabled = false; }, 4000);
+  }
+}
+
 // ---------- HISTORIAL (solo trae registros del docente logueado) ----------
 async function verHistorial() {
   const panel = document.getElementById("panel-historial");
@@ -322,6 +370,7 @@ function verDetalleHistorial(indice) {
   const item = window.historialCompleto[indice];
   ultimoResultado = item.contenido;
   ultimoTipo = item.tipo;
+  ultimoContexto = { asignatura: item.asignatura, grado: item.grado, tema: item.tema };
 
   if (item.tipo === "infografia") {
     renderizarInfografia(item.contenido, item.asignatura, item.tema, item.grado);
@@ -331,5 +380,6 @@ function verDetalleHistorial(indice) {
     document.getElementById("infografia-visual").style.display = "none";
   }
   document.getElementById("btn-descargar").style.display = "block";
+  document.getElementById("btn-correo").style.display = "block";
   document.getElementById("resultado").scrollIntoView({ behavior: "smooth" });
 }
