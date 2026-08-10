@@ -81,10 +81,11 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        // Con 2000 el cuestionario se cortaba en la pregunta 8 de 10.
-        // 8000 deja margen de sobra para las 10 preguntas con solucionario
-        // y para preparaciones de clase largas.
-        max_tokens: 8000,
+        // El límite real aquí no es el modelo, es el reloj de Vercel: la
+        // función se corta a los 60 s. Con 2000 el cuestionario se cortaba en
+        // la pregunta 8; con 8000 el modelo se extendía tanto que pasaba de
+        // los 60 s y devolvía 504. 4000 es el punto medio verificado.
+        max_tokens: 4000,
         messages: [{ role: "user", content: PROMPTS[tipo]({ asignatura, grado, tema }) }]
       })
     });
