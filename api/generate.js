@@ -1,6 +1,10 @@
 // Esta función corre en el servidor de Vercel, nunca en el navegador del docente.
 // Por eso aquí SÍ es seguro tener la API key (se configura como variable de entorno).
 
+// Vercel corta las funciones a los 10 segundos por defecto. Generar un
+// cuestionario completo toma más que eso, así que subimos el margen.
+export const config = { maxDuration: 60 };
+
 const PROMPTS = {
   preparacion: ({ asignatura, tema, grado }) => `
 Eres un asesor pedagógico experto en diseño instruccional para docentes colombianos.
@@ -77,7 +81,10 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 2000,
+        // Con 2000 el cuestionario se cortaba en la pregunta 8 de 10.
+        // 8000 deja margen de sobra para las 10 preguntas con solucionario
+        // y para preparaciones de clase largas.
+        max_tokens: 8000,
         messages: [{ role: "user", content: PROMPTS[tipo]({ asignatura, grado, tema }) }]
       })
     });
