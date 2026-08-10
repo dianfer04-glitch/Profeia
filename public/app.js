@@ -7,7 +7,10 @@
 const SUPABASE_URL = "https://tagpacbeosktddomudqu.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_qJJiBuGFJ-LGEOx5JkVIyg_OWOSA8qb";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Ojo: la librería que se carga desde el CDN ya ocupa el nombre global
+// "supabase" (window.supabase). Por eso el cliente se llama "db" aquí:
+// usar "const supabase" choca con ese global y rompe todo el archivo.
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let usuarioActual = null;
 let ultimoResultado = "";
@@ -17,7 +20,7 @@ let ultimoTipo = "";
 async function enviarLinkMagico() {
   const correo = document.getElementById("input-correo").value.trim();
   if (!correo) return;
-  const { error } = await supabase.auth.signInWithOtp({ email: correo });
+  const { error } = await db.auth.signInWithOtp({ email: correo });
   const msg = document.getElementById("mensaje-login");
   msg.textContent = error
     ? "Hubo un error, intenta de nuevo."
@@ -26,7 +29,7 @@ async function enviarLinkMagico() {
 
 // ---------- REVISAR SESIÓN AL CARGAR ----------
 async function revisarSesion() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await db.auth.getSession();
   if (session) {
     usuarioActual = session.user;
     document.getElementById("usuario-info").textContent = usuarioActual.email;
@@ -48,7 +51,7 @@ function cerrarBienvenida() {
   document.getElementById("pantalla-app").style.display = "block";
 }
 revisarSesion();
-supabase.auth.onAuthStateChange(() => revisarSesion());
+db.auth.onAuthStateChange(() => revisarSesion());
 
 // ---------- LÍMITE DIARIO POR DOCENTE ----------
 // Durante el piloto con un solo usuario de prueba, lo dejamos alto para
@@ -60,7 +63,7 @@ async function generacionesDeHoy() {
   const inicioDelDia = new Date();
   inicioDelDia.setHours(0, 0, 0, 0);
 
-  const { count } = await supabase
+  const { count } = await db
     .from("clases_generadas")
     .select("*", { count: "exact", head: true })
     .eq("docente_id", usuarioActual.id)
@@ -71,7 +74,7 @@ async function generacionesDeHoy() {
 
 // ---------- BUSCAR SI YA EXISTE ALGO PARECIDO EN EL HISTORIAL ----------
 async function buscarSimilarEnHistorial(asignatura, tema, tipo) {
-  const { data } = await supabase
+  const { data } = await db
     .from("clases_generadas")
     .select("*")
     .eq("docente_id", usuarioActual.id)
@@ -145,7 +148,7 @@ async function generar(tipo) {
     document.getElementById("btn-descargar").style.display = "block";
 
     // Guardar en el historial PRIVADO del docente (aislado por RLS en Supabase)
-    await supabase.from("clases_generadas").insert({
+    await db.from("clases_generadas").insert({
       docente_id: usuarioActual.id,
       asignatura, grado, tema, tipo,
       contenido: data.contenido
@@ -268,7 +271,7 @@ async function verHistorial() {
   // La política de seguridad (RLS) en Supabase garantiza que esta consulta
   // SOLO devuelve filas donde docente_id = usuarioActual.id, sin importar
   // qué parámetros se envíen. Ver supabase-schema.sql
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("clases_generadas")
     .select("*")
     .order("created_at", { ascending: false });
