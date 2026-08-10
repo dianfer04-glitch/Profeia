@@ -56,7 +56,9 @@ Con base en:
 - Tema: ${tema}
 - Grado/nivel: ${grado}
 
-Genera un cuestionario de 10 preguntas tipo Pruebas Saber (opción múltiple, 4 opciones A-D), con contexto/situación breve en cada enunciado. Varía la dificultad: 3 básicas, 4 intermedias, 3 avanzadas. Para cada pregunta incluye la respuesta correcta y una justificación breve. Preséntalo en texto claro y numerado.
+Genera un cuestionario de 10 preguntas tipo Pruebas Saber (opción múltiple, 4 opciones A-D), con contexto/situación breve en cada enunciado. Varía la dificultad: 3 básicas, 4 intermedias, 3 avanzadas. Para cada pregunta incluye la respuesta correcta y una justificación de máximo dos líneas.
+
+Formato: texto plano numerado del 1 al 10. Nada de emojis, tablas, separadores ni encabezados decorativos, y no agregues una tabla resumen al final. El docente imprime esto en papel: cada palabra que escribas debe ser parte de la pregunta, de las opciones, de la respuesta o de la justificación.
 `
 };
 
@@ -84,8 +86,9 @@ export default async function handler(req, res) {
         // El límite real aquí no es el modelo, es el reloj de Vercel: la
         // función se corta a los 60 s. Con 2000 el cuestionario se cortaba en
         // la pregunta 8; con 8000 el modelo se extendía tanto que pasaba de
-        // los 60 s y devolvía 504. 4000 es el punto medio verificado.
-        max_tokens: 4000,
+        // los 60 s y devolvía 504. 3000 es el techo seguro: aun escribiendo
+        // hasta el tope, la función termina con margen antes del corte.
+        max_tokens: 3000,
         messages: [{ role: "user", content: PROMPTS[tipo]({ asignatura, grado, tema }) }]
       })
     });
