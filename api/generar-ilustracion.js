@@ -1,3 +1,8 @@
+// Genera una ilustración decorativa relacionada con el tema de la clase,
+// usando la API de generación de imágenes de OpenAI (DALL-E).
+// Esta ilustración se usa como acompañamiento visual de la infografía;
+// el texto se sigue generando aparte para que siempre quede legible.
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
@@ -30,6 +35,7 @@ export default async function handler(req, res) {
     }
 
     const data = await respuesta.json();
+    // La API devuelve la imagen en base64
     const imagenBase64 = data.data?.[0]?.b64_json;
 
     res.status(200).json({ imagen: imagenBase64 });

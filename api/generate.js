@@ -1,3 +1,6 @@
+// Esta función corre en el servidor de Vercel, nunca en el navegador del docente.
+// Por eso aquí SÍ es seguro tener la API key (se configura como variable de entorno).
+
 const PROMPTS = {
   preparacion: ({ asignatura, tema, grado }) => `
 Eres un asesor pedagógico experto en diseño instruccional para docentes colombianos.
@@ -79,6 +82,10 @@ export default async function handler(req, res) {
       })
     });
 
+    // Si tu cuenta llega a su límite de capacidad (esto es normal cuando
+    // muchos docentes usan la herramienta a la vez), Anthropic responde con
+    // un código 429. En vez de que el docente vea un error técnico feo,
+    // le damos un mensaje claro y le pedimos reintentar en un momento.
     if (respuesta.status === 429) {
       return res.status(429).json({
         error: "Estamos con mucha demanda en este momento. Intenta de nuevo en unos segundos."
