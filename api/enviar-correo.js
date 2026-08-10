@@ -14,6 +14,13 @@ const SUPABASE_ANON_KEY = "sb_publishable_qJJiBuGFJ-LGEOx5JkVIyg_OWOSA8qb";
 // dirección de pruebas de Resend, que solo entrega al dueño de la cuenta.
 const REMITENTE = process.env.CORREO_REMITENTE || "ProfeIA <onboarding@resend.dev>";
 
+// Modo piloto: mientras Resend esté en pruebas solo entrega correos al dueño
+// de la cuenta. Si se configura DESTINO_FIJO en Vercel, todo lo generado
+// llega a esa bandeja (la del administrador), sin importar qué docente lo
+// haya generado, y él lo reenvía. Al quitar esta variable —cuando haya
+// dominio propio— cada docente vuelve a recibir lo suyo, sin tocar código.
+const DESTINO_FIJO = process.env.DESTINO_FIJO || null;
+
 const TITULOS = {
   preparacion: "Preparación de clase",
   infografia: "Infografía del tema",
@@ -21,7 +28,7 @@ const TITULOS = {
 };
 
 // Convierte el contenido en HTML legible dentro del correo.
-function armarCuerpo({ tipo, asignatura, grado, tema, contenido }) {
+function armarCuerpo({ tipo, asignatura, grado, tema, contenido, docente, redirigido }) {
   let interior;
 
   if (tipo === "infografia") {
@@ -56,6 +63,11 @@ function armarCuerpo({ tipo, asignatura, grado, tema, contenido }) {
   return `
   <div style="max-width:640px; margin:0 auto; padding:24px; font-family:Helvetica,Arial,sans-serif; background:#FAF9F6;">
     <div style="font-size:18px; font-weight:700; color:#1F5C6E; margin-bottom:20px;">ProfeIA</div>
+    ${redirigido ? `
+    <div style="background:#FFF4E8; border:1px solid #FF6B4A; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; color:#2B2B2B;">
+      Generado por <strong>${docente}</strong>. Te llega a ti porque el envío
+      está en modo piloto; reenvíaselo a esa persona.
+    </div>` : ""}
     <div style="background:#FFFFFF; border:1px solid #E3E0D8; border-radius:12px; padding:24px;">
       <p style="margin:0 0 4px; font-size:13px; color:#6B6B6B; text-transform:uppercase; letter-spacing:0.5px;">
         ${TITULOS[tipo] || "Contenido generado"}
@@ -96,11 +108,14 @@ export default async function handler(req, res) {
     }
 
     const usuario = await perfil.json();
-    const destinatario = usuario.email;
+    const docente = usuario.email;
 
-    if (!destinatario) {
+    if (!docente) {
       return res.status(401).json({ error: "No pudimos identificar tu correo." });
     }
+
+    // En modo piloto todo va a la bandeja del administrador; si no, al docente.
+    const destinatario = DESTINO_FIJO || docente;
 
     // 2. Enviarle el correo a esa persona, y solo a esa persona.
     const envio = await fetch("https://api.resend.com/emails", {
@@ -112,8 +127,13 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: REMITENTE,
         to: [destinatario],
-        subject: `${TITULOS[tipo] || "ProfeIA"}: ${tema}`,
-        html: armarCuerpo({ tipo, asignatura, grado, tema, contenido })
+        subject: DESTINO_FIJO
+          ? `[${docente}] ${TITULOS[tipo] || "ProfeIA"}: ${tema}`
+          : `${TITULOS[tipo] || "ProfeIA"}: ${tema}`,
+        html: armarCuerpo({
+          tipo, asignatura, grado, tema, contenido,
+          docente, redirigido: Boolean(DESTINO_FIJO)
+        })
       })
     });
 
@@ -127,7 +147,11 @@ export default async function handler(req, res) {
       });
     }
 
-    res.status(200).json({ ok: true, destinatario });
+    // En modo piloto no le mostramos al docente la bandeja del administrador.
+    res.status(200).json({
+      ok: true,
+      mensaje: DESTINO_FIJO ? "✅ Enviado" : `✅ Enviado a ${destinatario}`
+    });
   } catch (e) {
     console.error("Error enviando el correo:", e);
     res.status(500).json({ error: "Ocurrió un error enviando el correo." });

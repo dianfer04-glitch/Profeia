@@ -294,7 +294,7 @@ async function enviarPorCorreo() {
     const data = await respuesta.json();
 
     if (respuesta.ok) {
-      boton.textContent = `✅ Enviado a ${data.destinatario}`;
+      boton.textContent = data.mensaje || "✅ Enviado";
     } else {
       boton.textContent = "❌ No se pudo enviar";
       alert(data.error || "No se pudo enviar el correo.");
