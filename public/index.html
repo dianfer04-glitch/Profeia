@@ -50,22 +50,21 @@
       <h1>Nueva clase</h1>
       <p class="subtitulo">Completa los datos y elige qué necesitas generar.</p>
 
+      <!-- Piloto acotado: solo las 3 asignaturas y los 3 grados que se
+           están probando. Al ser menos opciones, la IA recibe un grado
+           exacto (7°) en vez de un rango (6°-9°) y afina mejor el nivel. -->
       <label>Asignatura</label>
       <select id="asignatura">
+        <option>Español</option>
         <option>Matemáticas</option>
-        <option>Lenguaje</option>
-        <option>Ciencias Naturales</option>
-        <option>Ciencias Sociales</option>
-        <option>Inglés</option>
-        <option>Otra</option>
+        <option>Biología</option>
       </select>
 
       <label>Grado</label>
       <select id="grado">
-        <option>1° - 3° (Primaria inicial)</option>
-        <option>4° - 5° (Primaria)</option>
-        <option>6° - 9° (Secundaria)</option>
-        <option>10° - 11° (Media)</option>
+        <option>5° (Primaria)</option>
+        <option>6° (Bachillerato)</option>
+        <option>7° (Bachillerato)</option>
       </select>
 
       <label>Tema de la clase</label>
